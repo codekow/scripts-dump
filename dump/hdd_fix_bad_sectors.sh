@@ -9,7 +9,11 @@ check_bins(){
 }
 
 choose_repair(){
-  read -p "Do you want to attempt repair (enter: YES)?: " REPAIR
+  read -r -p "Do you want to attempt repair (enter: YES)?: " REPAIR
+}
+
+debug(){
+  echo -ne "$1:  ${SECTOR} on ${DRIVE}\r"
 }
 
 select_drive(){
@@ -25,8 +29,8 @@ dmesg_range(){
   for i in $(dmesg | grep 'error,' | grep 'sector' | sed 's/.* dev //; s/, sector /,/; s/ op.*$//')
   #for i in $(dmesg | grep sector | grep error | sed 's/.* sector \([0-9]*\) .*/\1/' | sort)
   do
-    SECTOR=$(echo $i | cut -f2 -d',')
-    DRIVE=/dev/$(echo $i | cut -f1 -d',')
+    SECTOR=$(echo "$i" | cut -f2 -d',')
+    DRIVE=/dev/$(echo "$i" | cut -f1 -d',')
 
     echo "DRIVE: ${DRIVE}"
     echo "SECTOR: ${SECTOR}"
@@ -37,7 +41,7 @@ dmesg_range(){
 
 enter_target(){
   RANGE=60
-  FOUND=$(smartctl -x ${DRIVE} | grep ' failure' -m1 | awk '{print $10 }' )
+  FOUND=$(smartctl -x "${DRIVE}" | grep ' failure' -m1 | awk '{print $10 }' )
   FOUND=${1:-$FOUND}
 
   START=$((FOUND-RANGE))
@@ -53,9 +57,8 @@ enter_target(){
 check_range(){
   SECTOR=${START:-0}
 
-  while [ $SECTOR -le $FINISH ]
+  while [ "${SECTOR}" -le ${FINISH} ]
   do
-
     check_sector && {
       debug GOOD
     } || {
@@ -63,7 +66,7 @@ check_range(){
       debug BAD
       [ "${REPAIR}" == "YES" ] && {
         repair_sector
-        BAD_LIST="$SECTOR,$BAD_LIST"
+        BAD_LIST="${SECTOR},${BAD_LIST}"
       }
     }
 
@@ -78,8 +81,8 @@ check_range(){
 check_sector(){
   RESULT=$(hdparm \
     --read-sector \
-    ${SECTOR} \
-    ${DRIVE} 2>&1 >/dev/null)
+    "${SECTOR}" \
+    "${DRIVE}" 2>&1 >/dev/null)
   RC=$?
   if [ "${RESULT}" = "" ]; then
     return ${RC}
@@ -92,24 +95,20 @@ repair_sector(){
   hdparm \
     --yes-i-know-what-i-am-doing \
     --repair-sector \
-    ${SECTOR} \
-    ${DRIVE}
-}
-
-debug(){
-  echo -ne "$1:  ${SECTOR} on ${DRIVE}\r"
+    "${SECTOR}" \
+    "${DRIVE}"
 }
 
 smart_retest(){
   echo -ne '\n'
-  [ "x${BAD_LIST}" == "x" ] && exit
-  smartctl -t short ${DRIVE}
+  [ "${BAD_LIST}" == "" ] && exit
+  smartctl -t short "${DRIVE}"
 }
 
 check_bins
 dmesg_range
 choose_repair
-select_drive ${1}
-enter_target ${2}
+select_drive "${1}"
+enter_target "${2}"
 check_range
 smart_retest

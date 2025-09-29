@@ -1,6 +1,6 @@
 #!/bin/bash
 
-hdd_hdparm_wipe(){
+hdd_hdparm_hard_wipe(){
   CONFIRM=${1}
   DRIVE=${2}
 
