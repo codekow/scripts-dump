@@ -1,5 +1,6 @@
 #!/bin/bash
 # set -x
+# shellcheck disable=SC2015
 
 # REPAIR=YES
 
