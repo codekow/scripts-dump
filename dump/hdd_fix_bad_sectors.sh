@@ -83,7 +83,8 @@ check_sector(){
   RESULT=$(hdparm \
     --read-sector \
     "${SECTOR}" \
-    "${DRIVE}" 2>&1 >/dev/null)
+    "${DRIVE}" 2>&1 >/dev/null
+  )
   RC=$?
   if [ "${RESULT}" = "" ]; then
     return ${RC}
