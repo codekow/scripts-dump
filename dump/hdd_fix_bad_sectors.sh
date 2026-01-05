@@ -20,6 +20,7 @@ debug(){
 select_drive(){
   DRIVE=${1:-/dev/sda}
   echo "DRIVE: ${DRIVE}"
+  smartctl -s on -o on "${DRIVE}"
   sleep 2
 }
 
